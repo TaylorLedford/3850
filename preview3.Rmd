@@ -1,0 +1,42 @@
+---
+title: "preview3"
+author: "Taylor Ledford"
+date: "9/4/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(moments)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r berkeley}
+berkeley <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/berkeley.csv")
+summary(berkeley)
+berkeley %>% 
+  count(department) %>% 
+  arrange(desc(n))
+```
+
+
+```{r gasmileage}
+gasMileage <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/gasmileage.csv")
+oldFaithful <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/oldfaithful.csv")
+
+ggplot(gasMileage, aes(x=mpg)) +
+  geom_histogram()
+```
+
+
+```{r}
+FlightDelays %>% 
+  group_by(Carrier) %>%
+  summarize(n = n() , minimum = min(FlightLength), Q1 = fivenum(FlightLength)[2], median = median(FlightLength), Q3 = fivenum(FlightLength)[4], maximum = max(FlightLength))
+```

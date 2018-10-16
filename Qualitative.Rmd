@@ -1,0 +1,98 @@
+---
+title: "Categorical Summaries"
+author: "Taylor Ledford"
+date: "`r Sys.time()`"
+output: html_document
+---
+
+Consider the Flight Delays dataset discussed in Chapter 1 of the Chihara & Hesterberg textbook, which contains information on selected flights departing from LaGuardia airport in 2009. Complete the problems below using that dataset. For all plots, be sure to add an informative title and labels for the x and y axes.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+FlightDelays <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Chihara/FlightDelays.csv")
+```
+
+
+### Problem 1
+
+Create frequency tables for all of the qualitative variables.
+
+```{r}
+table(FlightDelays$Carrier)
+table(FlightDelays$Destination)
+table(FlightDelays$DepartTime)
+table(FlightDelays$Day)
+table(FlightDelays$Month)
+table(FlightDelays$Delayed30)
+```
+
+
+### Problem 2
+
+Create a barplot to display the frequency of each destination.
+
+```{r}
+freq <- FlightDelays %>% count(Destination)
+ggplot(freq, aes(x=Destination, y=n)) +
+  geom_bar(stat="identity") +
+  ylab("Frequency")
+
+```
+
+
+### Problem 3
+
+Create a barplot to show the relative frequency of each destination.
+
+```{r}
+total <- sum(freq$n)
+freq$m <- freq$n/total
+ggplot(freq, aes(x=Destination, y=m)) +
+  geom_bar(stat="identity") +
+  ylab("Percentage")
+```
+
+
+### Problem 4
+
+Use the information found [HERE](http://www.cookbook-r.com/Manipulating_data/Changing_the_order_of_levels_of_a_factor/) to reorder the levels of the departure time variable so they start at 4am and go in order around the clock. Then create a table that shows cumulative frequency of flights through the day and a barplot that shows the fraction of flights within each time period that are delayed by thirty minutes or more.
+
+```{r}
+FlightDelays$DepartTime <- ordered(FlightDelays$DepartTime, levels=c("4-8am","8-Noon","Noon-4pm","4-8pm","8-Mid"))
+freqTime <- table(FlightDelays$DepartTime)
+cumsum(freqTime)
+
+m <- FlightDelays %>% 
+      filter(Delayed30=="Yes") %>%
+      group_by(DepartTime) %>%
+      count()
+
+ggplot(m, aes(x=DepartTime, y=n/sum(n))) +
+  geom_bar(stat="identity") +
+  ylab("Percentage")
+```
+
+
+### Problem 5
+
+For two qualitative variables of your choice, create a table and a plot to summarize their relationship. What is one question your summaries might help answer?
+
+
+My summary gives an answer to which carrier has more delays that are 30 minutes or longer.
+```{r}
+x <- FlightDelays %>%
+  filter(Delayed30=="Yes") %>%
+  group_by(Carrier) %>%
+  count()
+
+ggplot(x, aes(x=Carrier, y=n)) +
+  geom_bar(stat="identity") +
+  ylab("Frequency")
+```
+
+
+<hr>
+
+END!!!
+

@@ -1,0 +1,131 @@
+---
+title: "Distributions"
+author: "Taylor Ledford"
+date: "9/26/2018"
+output: html_document
+---
+
+```{r}
+dbinom(6,25,.20)
+
+pbinom(5,25,.20, lower.tail=FALSE)
+
+# plotting a normal distribution
+
+library(ggplot2)
+
+# set the distribution parameters
+# this setting is standard normal
+
+mu    <- 0   # set the mean
+sigma <- 1   # set the standard deviation
+
+# set upper and lower boundaries for x 
+# can not graph all the way to +/- inf
+# 99.7% of area is within 3 sigma of mu
+# so four standard deviations works well
+# (review the empirical rule for areas)
+
+LB    <- mu - 4*sigma   # lower boundary
+UB    <- mu + 4*sigma   # upper boundary
+
+# draw probability density function (pdf)
+# the dnorm function generates pdf or f(x)
+# unlike discrete RVs, f(x) is not P(X = x)
+# plot title here adapts to the parameters
+# tick marks set 1, 2, 3, 4 sigma from mu
+
+ggplot(NULL, aes(x = c(LB, UB))) +
+  stat_function(fun = dnorm, args = list(mu, sigma)) +
+  scale_x_continuous(breaks = seq(from = LB, to = UB, by = sigma)) +
+  labs(title = (paste("probability density function of X ~ N(", mu, ",", sigma^2, ")", sep = "")),
+       x = "value of x",
+       y = "probability density")
+
+ggplot(NULL, aes(x = c(0,10))) +
+  stat_function(fun = dexp, args = list(1))
+```
+```{r}
+# we do not have to standardize normal curves in R
+# the norm functions accept any mu and sigma input
+# sometimes there are other reasons to standardize
+# you can standardize a column of data using scale()
+
+mu    <- 162.2
+sigma <- 6.8
+
+LB    <- mu - 4*sigma   # lower boundary
+UB    <- mu + 4*sigma   # upper boundary
+
+x     <- 170.5
+z     <- (x - mu) / sigma
+print(z)
+
+# shade an area under the normal curve
+# norm F(x) has no closed-form solution
+# the pnorm function will "integrate"
+# (not really calculating an integral)
+
+# What is the area below the value x?
+# Can you mod this code to use the z?
+
+probL <- pnorm(x, mu, sigma)
+print(probL)
+
+ggplot(NULL, aes(x = c(LB, UB))) +
+  stat_function(fun = dnorm, args = list(mu, sigma)) +
+  geom_area(stat = "function", fun = dnorm, args = list(mu, sigma), fill = "blue", xlim = c(LB, x)) +
+  geom_area(stat = "function", fun = dnorm, args = list(mu, sigma), fill = "gray", xlim = c(x, UB)) +
+  scale_x_continuous(breaks = seq(from = LB, to = UB, by = sigma)) +
+  labs(title = sprintf("area = probability = %.4f", probL),
+       x = "value of x",
+       y = "probability density")
+
+# What is the area above the value x?
+# Can you mod this code to use the z?
+
+probU <- pnorm(x, mu, sigma, lower.tail = FALSE)
+print(probU)
+
+ggplot(NULL, aes(x = c(LB, UB))) +
+  stat_function(fun = dnorm, args = list(mu, sigma)) +
+  geom_area(stat = "function", fun = dnorm, args = list(mu, sigma), fill = "blue", xlim = c(x, UB)) +
+  geom_area(stat = "function", fun = dnorm, args = list(mu, sigma), fill = "gray", xlim = c(LB, x)) +
+  scale_x_continuous(breaks = seq(from = LB, to = UB, by = sigma)) +
+  labs(title = sprintf("area = probability = %.4f", probU),
+       x = "value of x",
+       y = "probability density")
+
+# What is the area between x1 and x2?
+
+x1 <- 150.5
+x2 <- 170.5
+
+probB <- pnorm(x2, mu, sigma) - pnorm(x1, mu, sigma)
+print(probB)
+
+ggplot(NULL, aes(x = c(LB, UB))) +
+  stat_function(fun = dnorm, args = list(mu, sigma)) +
+  geom_area(stat = "function", fun = dnorm, args = list(mu, sigma), fill = "gray", xlim = c(LB, x1)) +
+  geom_area(stat = "function", fun = dnorm, args = list(mu, sigma), fill = "blue", xlim = c(x1, x2)) +
+  geom_area(stat = "function", fun = dnorm, args = list(mu, sigma), fill = "gray", xlim = c(x2, UB)) +
+  scale_x_continuous(breaks = seq(from = LB, to = UB, by = sigma)) +
+  labs(title = sprintf("area = probability = %.4f", probB),
+       x = "value of x",
+       y = "probability density")
+
+# What is the 10th percentile?
+
+pct <- qnorm(.10, mu, sigma)
+print(pct)
+
+ggplot(NULL, aes(x = c(LB, UB))) +
+  stat_function(fun = dnorm, args = list(mu, sigma)) +
+  geom_area(stat = "function", fun = dnorm, args = list(mu, sigma), fill = "blue", xlim = c(LB, pct)) +
+  geom_area(stat = "function", fun = dnorm, args = list(mu, sigma), fill = "gray", xlim = c(pct, UB)) +
+  scale_x_continuous(breaks = seq(from = LB, to = UB, by = sigma)) +
+  labs(title = sprintf("percentile value = %.4f", pct),
+       x = "value of x",
+       y = "probability density")
+
+```

@@ -1,0 +1,161 @@
+---
+title: "NormalPreview"
+author: "Taylor Ledford"
+date: "10/8/2018"
+output: html_document
+---
+
+```{r message=FALSE}
+library(dplyr)
+library(moments)
+library(ggplot2)
+height <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/galtonheightdata.csv")
+
+father <- sample(height$Father, 100)
+meanF <- mean(father)
+sdF <- sd(father)
+
+ggplot(NULL, aes(x=father)) +
+  geom_density() +
+  stat_function(fun=dnorm, args=list(meanF, sdF), color="red")
+
+ggplot(NULL, aes(x = father)) + 
+  stat_ecdf() +
+  stat_function(fun=pnorm, args=list(meanF, sdF), color="red")
+
+deciles <- c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
+tib <- tibble(data=quantile(father, deciles), theory=qnorm(deciles, meanF, sdF))
+
+ggplot(data=tib, aes(x=theory, y=data)) +
+  geom_point() +
+  geom_abline(data=tib, color="red")
+
+ggplot(NULL, aes(sample = father)) + 
+  stat_qq() + #plot
+  stat_qq_line(color = "red") #reference line
+
+skewK <- tibble(Statistic = c("Skewness", "Kurtosis", "Excess K"),
+                Theory    = c(0, 3, 0),
+                Data      = c(round(skewness(father), 2), 
+                              round(kurtosis(father), 2), 
+                              round(kurtosis(father) - 3, 2)))
+print.data.frame(skewK)
+```
+
+```{r}
+size <- 50
+data <- tibble(runif=runif(size,0,1), 
+               rexp=rexp(size,1), 
+               rbinom.5=rbinom(size,10,.5), 
+               rbinom.2=rbinom(size,10,.2), 
+               rbinom.8=rbinom(size,10,.8), 
+               rt1=rt(size,3), 
+               rt2=rt(size,100))
+
+meanRunif <- mean(data$runif)
+sdRunif <- sd(data$runif)
+
+ggplot(data, aes(x=runif)) +
+  geom_density() +
+  stat_function(fun=dnorm, args=list(meanRunif, sdRunif), color="red")
+
+ggplot(data, aes(x = runif)) + 
+  stat_ecdf() +
+  stat_function(fun=pnorm, args=list(meanRunif, sdRunif), color="red")
+
+deciles <- c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
+tib <- tibble(data=quantile(data$runif, deciles), theory=qnorm(deciles, meanRunif, sdRunif))
+
+ggplot(data, aes(x=tib$theory, y=tib$data, sample=tib)) +
+  geom_point(aes(fill="black")) +
+  stat_qq_line(color="red")
+
+ggplot(data, aes(sample = runif)) + 
+  stat_qq() + #plot
+  stat_qq_line(color = "red") #reference line
+
+skewK <- tibble(Statistic = c("Skewness", "Kurtosis", "Excess K"),
+                Theory    = c(0, 3, 0),
+                Data      = c(round(skewness(data$runif), 2), 
+                              round(kurtosis(data$runif), 2), 
+                              round(kurtosis(data$runif) - 3, 2)))
+skewK
+```
+
+
+```{r}
+mean <- mean(data$rexp)
+sd <- sd(data$rexp)
+
+ggplot(data, aes(x=rexp)) +
+  geom_density() +
+  stat_function(fun=dnorm, args=list(mean, sd), color="red")
+
+ggplot(data, aes(x=rexp)) + 
+  stat_ecdf() +
+  stat_function(fun=pnorm, args=list(mean, sd), color="red")
+
+deciles <- c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
+tib <- tibble(data=quantile(data$rexp, deciles), theory=qnorm(deciles, mean, sd))
+
+ggplot(data, aes(sample = rexp)) + 
+  stat_qq() + #plot
+  stat_qq_line(color = "red") #reference line
+
+skewK <- tibble(Statistic = c("Skewness", "Kurtosis", "Excess K"),
+                Theory    = c(0, 3, 0),
+                Data      = c(round(skewness(data$rexp), 2), 
+                              round(kurtosis(data$rexp), 2), 
+                              round(kurtosis(data$rexp) - 3, 2)))
+skewK
+```
+
+
+```{r}
+mean <- mean(data$rbinom.5)
+sd <- sd(data$rbinom.5)
+data9 <- sample(data, 9)
+
+ggplot(data, aes(x=rbinom.5)) +
+  geom_density() +
+  stat_function(fun=dnorm, args=list(mean, sd), color="red")
+
+ggplot(data, aes(x=rbinom.5)) + 
+  stat_ecdf() +
+  stat_function(fun=pnorm, args=list(mean, sd), color="red")
+
+deciles <- c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
+tib <- tibble(data=quantile(data$rbinom.5, deciles), theory=qnorm(deciles, mean, sd))
+
+ggplot(data, aes(sample = rbinom.5)) + 
+  stat_qq() + #plot
+  stat_qq_line(color = "red") #reference line
+
+skewK <- tibble(Statistic = c("Skewness", "Kurtosis", "Excess K"),
+                Theory    = c(0, 3, 0),
+                Data      = c(round(skewness(data$rbinom.5), 2), 
+                              round(kurtosis(data$rbinom.5), 2), 
+                              round(kurtosis(data$rbinom.5) - 3, 2)))
+skewK
+```
+
+```{r}
+n <- 25
+x <- 0:n
+p <- 1/5
+
+cutoff <- 10   #more than how many?
+
+pmfX     <- data.frame(x = x, p = dbinom(x, n, p))
+shading1 <- ifelse(pmfX$x > cutoff, "red", "gray")
+
+library(ggplot2)
+ggplot(pmfX, aes(x = x, y = p)) +
+  geom_bar(stat = "identity", width = 1, fill = shading1, col = "darkgray") +
+  labs(title = "Probability Distribution of Cards Guessed Correctly", 
+       subtitle = "the area corresponding to statistical significance is shaded in red", 
+       y = "p(x)")
+
+probSig <- pbinom(cutoff, n, p, lower.tail = FALSE)
+sprintf("The probability of getting more than the cutoff value correct, given that a person is guessing randomly, is %1.3f.", probSig)
+```

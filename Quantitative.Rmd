@@ -1,0 +1,125 @@
+---
+title: "Quantitative Summaries"
+author: "Taylor Ledford"
+date: "`r Sys.time()`"
+output: html_document
+---
+
+Consider the Flight Delays dataset discussed in Chapter 1 of the Chihara & Hesterberg textbook, which contains information on selected flights departing from LaGuardia airport in 2009. Complete all problems below using that dataset. Use `dplyr` functions when possible for descriptive analyses. Create all plots using `ggplot2` and be sure to add an informative title and labels for the x and y axes.
+
+```{r message=FALSE}
+library(dplyr)
+library(ggplot2)
+FlightDelays <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Chihara/FlightDelays.csv")
+```
+
+
+### Problem 1
+
+Summarize the lengths of flight delays, including sample size, mean, standard deviation, and five-number summary.
+
+```{r}
+FlightDelays %>%
+  summarize(n=n(), mean=mean(Delay), sd=sd(Delay), minimum = fivenum(Delay)[1], Q1 = fivenum(Delay)[2], median = fivenum(Delay)[3], Q3 = fivenum(Delay)[4], maximum = fivenum(Delay)[5])
+```
+
+
+### Problem 2
+
+Create a boxplot to accompany your summaries in Problem 1. Calculate the upper fence and determine how many outliers there are in the data.
+
+```{r}
+ggplot(FlightDelays, aes(x=1,y=Delay)) +
+  geom_boxplot() +
+  xlab("")
+
+upperfence <- fivenum(FlightDelays$Delay)[2] + 1.5 * IQR(FlightDelays$Delay)
+
+NumOfOutliers <- FlightDelays %>%
+  filter(Delay > upperfence) %>%
+  count()
+
+NumOfOutliers
+```
+
+
+### Problem 3
+
+Consider the mean and median you found in Problem 1. Explain what the value of each tells us in the context of the variable; remember that the units of measure are minutes. Why are the two "centers" so different?
+
+ANSWER: The mean value tells us that the average delay for any flight is around 11 minutes. The median value tells us that the majority of flights do not have a delay, but are early. The centers are so different because the mean averages all the delays together to give an estimated wait time based on other peoples flights, including both extremes generating a higher number. The median arranges the numbers and finds the number in the very middle, since most flights do not have a delay the number is going to be small.
+
+
+### Problem 4
+
+Modify the destination variable so that each destination is labeled by city name rather than airport code. Summarize flight lengths by destination, including sample size, mean, standard deviation, median, and IQR. Order the results by increasing mean.
+
+```{r}
+levels(FlightDelays$Destination) <- c("Nashville", "Denver", "Dallas/Fort Worth", "Washington D.C.", "Miami", "Chicago","St. Louis")
+
+FlightDelays %>%
+  group_by(Destination) %>%
+  summarize(n=n(), mean=mean(FlightLength), sd=sd(FlightLength), median=median(FlightLength), IQR=IQR(FlightLength)) %>%
+  arrange(mean)
+```
+
+
+### Problem 5
+
+Create semi-transparent overlapping density plots to show flight length by destination. 
+
+```{r}
+ggplot(FlightDelays, aes(x=FlightLength, fill=Destination)) +
+geom_density(alpha=0.7) +
+  ylab("Density")
+```
+
+
+### Problem 6
+
+How does the variability of flight lengths differ by destination? Are the similar or different? How do you know? Remember that the units of measure are minutes.
+
+ANSWER: The variability of flight lengths do differ slightly by destination, but not as much as one would think. The Washington D.C flight which is the shortest flight has a variability of 7 minutes, whereas the Denver flight which is the longest has a variability of 10 minutes. Overall the flights have relatively the same variability regardless of destination. 
+
+
+### Problem 7
+
+Reorder the variable representing day of the week so that the days are in order from Sunday to Saturday. Summarize the delays by both carrier and day (at the same time), including sample size, mean, standard deviation, and maximum. 
+
+```{r}
+FlightDelays$DayR <- factor(FlightDelays$Day, levels = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))
+
+m <- FlightDelays %>%
+  group_by(Carrier, DayR) %>%
+  summarize(n=n(), mean=mean(Delay), sd=sd(Delay), maximum=max(Delay))
+
+m
+```
+
+
+### Problem 8
+
+Create an appropriate plot to visualize the distribution of delays by both carrier and day.
+
+```{r}
+ggplot(data=m, aes(x=Day, y=mean, color=Carrier)) +
+  geom_point() +
+  ylab("Average Delay")
+```
+
+
+### Problem 9
+
+Is there a relationship between the length of the flight and how long it was delayed? Investigate this question.
+
+```{r}
+ggplot(FlightDelays, aes(x=FlightLength, y=Delay, color=Destination)) +
+  geom_point()
+
+```
+
+ANSWER: The length of the flight does not have a relationship with how long it was delayed. The amount of flights to a destination is what has relationship with how long the flight was delayed. 
+<hr>
+
+END!!!
+
