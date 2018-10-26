@@ -1,0 +1,77 @@
+---
+title: "Chi-Squared"
+author: "Taylor Ledford"
+date: "10/24/2018"
+output: html_document
+---
+
+# Create a new function to compute the chi-squared test statistic
+# The function's name is chisq, the required input is a data table 
+# Obs(erved) is the observed data table; variables are defined later
+# Exp(ected) is a contingency table computed from the Observed data
+# Outer is the outer product of two vectors, which makes a matrix
+# http://en.wikipedia.org/wiki/Outer_product
+# http://calculator.vhex.net/calculator/linear-algebra/outer-product
+```{r}
+chisq.teststat<-function(Obs)
+{ 
+  Exp <- outer(rowSums(Obs),colSums(Obs))/sum(Obs)
+  sum((Obs-Exp)^2/Exp)
+}
+
+# Load the dataset
+Berkeley <- read.csv(file=url("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/berkeley.csv"))
+
+# Select the two variables we want to test and make a table
+Observed <- table(Berkeley$sex,Berkeley$status)
+Observed
+addmargins(Observed)
+
+# Use function to calculate the chi-square test statistic (obs.diff)
+obs.diff <- chisq.teststat(Observed)
+obs.diff 
+
+# This computes the expected counts if we want to see them, but this
+# step is not necessary for the hypothesis test; the function does it
+Expected <- outer(rowSums(Observed),colSums(Observed))/sum(Observed)
+Expected
+
+# Resampling permutation test loop and graph of results
+# Start with selecting the two variables to be analyzed
+sex    <- Berkeley$sex
+status <- Berkeley$status
+
+N <- 10^4-1
+random.diff<-numeric(N)
+
+for (i in 1:N){
+  STATUS.perm <-sample(status)
+  RANDOM.table <- table(sex, STATUS.perm)
+  random.diff[i]<-chisq.teststat(RANDOM.table)
+}
+
+# Graph the null distribution of the test statistic
+
+hist(random.diff, prob=T,
+     main="Null Distribution of Chi-Square Test Statistic",
+     xlab="randomly generated chi-square statistics", 
+     xlim=c(0,max(max(random.diff),obs.diff)),
+     ylim=c(0,1))
+abline(v=obs.diff,
+       col="blue",
+       lty=5)  
+
+diff_df <- data.frame(random.diff)
+
+df <- diff_df %>%
+  count(random.diff)
+
+ggplot(df, aes(x=n, y=random.diff)) +
+  geom_histogram(stat="identity") +
+  geom_vline(aes(xintercept=obs.diff))
+
+# Print the test statistic and p-value
+# The p-value is (sum(random.diff >= obs.diff) + 1)/(N + 1) 
+print(paste("The chi-square test statistic is ", round(obs.diff,4), ".", sep=""),quote=F)
+print(paste("The p-value for the test of independence is ", format((sum(random.diff >= obs.diff) + 1)/(N + 1),scientific=F), ".", sep=""),quote=F)
+```
