@@ -58,8 +58,8 @@ pvalue.upper <- (sum(permMeanDiff >= obsMeanDiff) + 1) / (N + 1)
 
 pvalue.twotail <- 2 * min(pvalue.lower, pvalue.upper)
 
-data.frame(alternative = c("Lower-Tail"),
-           pvalue      = c(pvalue.lower))
+data.frame(alternative = c("Two-Tailed"),
+           pvalue      = c(pvalue.twotail))
 ```
 
 
@@ -162,8 +162,8 @@ pvalue.upper <- (sum(permVarDiff >= obsVarRatio$variance) + 1) / (N + 1)
 
 pvalue.twotail <- 2 * min(pvalue.lower, pvalue.upper)
 
-data.frame(alternative = c("Upper-Tail"),
-           pvalue      = c(pvalue.upper))
+data.frame(alternative = c("Two-Tailed"),
+           pvalue      = c(pvalue.twotail))
 
 
 ```
