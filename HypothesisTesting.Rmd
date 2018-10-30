@@ -75,7 +75,7 @@ summary2 <- Delays %>%
 
 print(summary2)
 
-obsPropDiff <- diff(summary2$delayed)
+obsPropDiff <- -diff(summary2$delayed)
 obsPropDiff
 
 sprintf("UA has a delayed proportion greater than AA by %s", summary2[2, "delayed"] - summary2[1, "delayed"])
