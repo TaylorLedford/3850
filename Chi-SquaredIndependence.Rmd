@@ -1,9 +1,28 @@
----
-title: "Chi-Squared"
-author: "Taylor Ledford"
-date: "10/24/2018"
-output: html_document
----
+# Chi-Square Test of Independence
+# Berkeley Graduate Admissions Bias
+# Are sex and status dependent?
+# Data for largest six departments
+# Last updated 10.24.2018 @ 11:00am
+```{r}
+library(dplyr)
+# Load the dataset
+Berkeley <- read.csv(file=url("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/berkeley.csv"))
+str(Berkeley)
+
+A <- Berkeley %>%
+  filter(department == "A")
+
+sex    <- A$sex
+status <- A$status
+
+# Select the two variables we want to test and make a table
+Observed <- table(sex,status)
+print(Observed)
+
+
+# What kind of table would we expect to see if Ho is true?
+
+Expected <- outer(rowSums(Observed),colSums(Observed))/sum(Observed)
 
 # Create a new function to compute the chi-squared test statistic
 # The function's name is chisq, the required input is a data table 
@@ -11,37 +30,16 @@ output: html_document
 # Exp(ected) is a contingency table computed from the Observed data
 # Outer is the outer product of two vectors, which makes a matrix
 # http://en.wikipedia.org/wiki/Outer_product
-# http://calculator.vhex.net/calculator/linear-algebra/outer-product
-```{r}
-library(ggplot2)
 
-chisq.teststat<-function(Obs)
-{ 
+chisq.teststat <- function(Obs){ 
   Exp <- outer(rowSums(Obs),colSums(Obs))/sum(Obs)
   sum((Obs-Exp)^2/Exp)
 }
 
-# Load the dataset
-Berkeley <- read.csv(file=url("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/berkeley.csv"))
-
-# Select the two variables we want to test and make a table
-Observed <- table(Berkeley$sex,Berkeley$status)
-Observed
-addmargins(Observed)
-
-# Use function to calculate the chi-square test statistic (obs.diff)
-obs.diff <- chisq.teststat(Observed)
-obs.diff 
-
-# This computes the expected counts if we want to see them, but this
-# step is not necessary for the hypothesis test; the function does it
-Expected <- outer(rowSums(Observed),colSums(Observed))/sum(Observed)
-Expected
+obs.diff <- chisq.teststat(table(sex,status))
 
 # Resampling permutation test loop and graph of results
 # Start with selecting the two variables to be analyzed
-sex    <- Berkeley$sex
-status <- Berkeley$status
 
 N <- 10^4-1
 random.diff<-numeric(N)
@@ -63,17 +61,28 @@ abline(v=obs.diff,
        col="blue",
        lty=5)  
 
-diff_df <- data.frame(random.diff)
-
-df <- diff_df %>%
-  count(random.diff)
-
-ggplot(df, aes(x=n, y=random.diff)) +
-  geom_histogram(stat="identity") +
-  geom_vline(aes(xintercept=obs.diff))
-
 # Print the test statistic and p-value
 # The p-value is (sum(random.diff >= obs.diff) + 1)/(N + 1) 
 print(paste("The chi-square test statistic is ", round(obs.diff,4), ".", sep=""),quote=F)
 print(paste("The p-value for the test of independence is ", format((sum(random.diff >= obs.diff) + 1)/(N + 1),scientific=F), ".", sep=""),quote=F)
+
+table <- table(sex, status)
+prop.table(table, 1)
+```
+
+```{r}
+toy1 <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/tommypickles1.csv")
+toy2 <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/tommypickles2.csv")
+
+observed <- table(toy1$outcome)
+prop.table(observed)
+chisq.test(observed)
+
+prob <- c(.4,.4,.2)
+expected <- prob * 99
+expected
+
+observed <- table(toy2$outcome)
+prop.table(observed)
+chisq.test(observed, p=prob)
 ```

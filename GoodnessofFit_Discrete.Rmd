@@ -1,0 +1,43 @@
+```{r}
+library(tidyverse)
+red <- read.csv(file=url("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/powerballred.csv"))
+```
+
+```{r}
+observed1 <- table(red$powerball)
+print(observed1)
+prop.table(observed1)
+
+ggplot(red, aes(x = powerball)) + 
+  geom_bar() +
+  geom_hline(yintercept = sum(observed1)/length(observed1), col = "red")
+
+ggplot(red, aes(x = powerball)) + 
+  geom_bar(aes(y=..count../sum(..count..))) +
+  geom_hline(yintercept = 1/35, col = "red") +
+  ylab("proportion")
+
+chisq.test(table(red$powerball))
+
+
+red <- red %>% 
+  mutate(testcategories = case_when(powerball >= 1  & powerball <= 7  ~ '01 to 07',
+                                    powerball >= 8  & powerball <= 14 ~ '08 to 14',
+                                    powerball >= 15 & powerball <= 21 ~ '15 to 21',
+                                    powerball >= 22 & powerball <= 28 ~ '22 to 28',
+                                    powerball >= 29 & powerball <= 35 ~ '29 to 35'))
+
+observed2 <- table(red$testcategories)
+prop.table(observed2)
+
+ggplot(red, aes(x = testcategories)) + 
+  geom_bar() + 
+  geom_hline(yintercept = sum(observed2)/length(observed2), col = "red")
+
+ggplot(red, aes(x = testcategories)) + 
+  geom_bar(aes(y=..count../sum(..count..))) +
+  geom_hline(yintercept = 1/5, col = "red") +
+  ylab("proportion")
+
+chisq.test(observed2)
+```

@@ -1,0 +1,151 @@
+---
+title: "Popularity Study, Part 1"
+author: "James Brown, Taylor Ledford, Grace Rogers"
+date: 'Updated: `r format(Sys.time(), "%A, %B %d, %Y @ %X")`'
+output: 
+  html_document: 
+    highlight: textmate
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = "")
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+```{r, echo=FALSE}
+# load all packages and datasets here
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+pop_data <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/popular.csv")
+graces_bomb_theme <-  theme(panel.background = element_rect(fill = "grey70"))+
+  theme(text=element_text(family = "Palatino"))
+```
+
+<hr>
+
+1) Display the dataset structure and a basic `summary()`.
+
+```{r}
+print(str(pop_data))
+print(summary(pop_data))
+```
+
+
+2) Create a table and a plot that divides each goal according to the percentage of boys and girls who chose that goal. Does choice of top goal appear to be related to gender? Explain.
+
+```{r}
+#table that divides each goal according to the percent of boys and girls who chose that goal
+goals_and_gender_percents <- prop.table(table(pop_data$top_goal, pop_data$gender), 1)
+print(goals_and_gender_percents)
+
+#create a plot that shows this relationship
+#reorder levels of top_goal
+pop_data$top_goal <- factor(pop_data$top_goal, levels = c("sports", "grades", "popular"))
+
+ggplot(pop_data, aes(x = top_goal, fill= gender)) +
+  geom_bar(position = "fill", colour = "black") +
+  labs(x = "Top Goal chosen by Each Gender", y = "Percentage of Students", title = "Most Important Goal Chosen by Boys and Girls")+
+  scale_fill_manual(values = c("boy" = "#BACCE6", "girl" = "#E0CDED")) +
+  graces_bomb_theme
+
+```
+
+EXPLAIN:The most important goal chosen by the students does seem to be related to gender. Although a similar amount of boys and girls chose grades as their most important goal, there is variation amoung which gender chose sports and popularity. Of the students who chose sport as their most important goal, two-thirds of them were boys as only one-third was girls. We see a flipped percentage when we look at popularity. About two-thirds of the students who chose popularity as their top goal were girls as only about one-third were boys.
+
+3) Create a table and a plot that divides each district type according to the percentage of students who chose each goal. Does choice of top goal appear to be related to district type? Explain.
+
+```{r}
+#table that divides district type according to percent of students who choose each goal
+goals_and_districts_percents <- prop.table(table(pop_data$top_goal, pop_data$district_type), 2) %>%
+as.data.frame()
+print(goals_and_districts_percents)
+
+#Reordering goals and Districts
+goals_and_districts_percents$Var1 <- factor(goals_and_districts_percents$Var1, levels = c("sports", "popular", "grades"))
+
+#plot that shows percentages across district type
+ggplot(goals_and_districts_percents, aes(x = Var2, y = Freq, fill= factor(Var2)))+
+  geom_bar(stat = "identity", colour = "grey30") +
+  facet_wrap( ~ Var1) +
+  labs(x = "Area of Residency", y = "Percentage of Students", title = "Most Important Goal to Students in Each District") +
+  graces_bomb_theme+
+  scale_fill_manual(values = c("rural" = "#F3F3A7", "suburban" = "#F5CB9B", "urban" = "#F0A8A3"))+
+  theme(legend.position="none")
+
+
+```
+
+EXPLAIN: The area of residency of a student seems to have little relation to their choice of top goal. The suburban and urban districts have almost identical perecentages of students that chose each goal. Students from the rural district chose popularity and sports as their most important goal more often that the students form the surburban and urban school districts did. Overall, the three areas of residency have similar distributions, with the rural district being the only one that varies significantly, but the rural district still follows the trend of the other two districts with the most students choosing grades, then popularity, then sports as their most important goals.
+
+4) Create four barplots to compare the ranks given to grades, sports, looks, and money by boys and girls. Use unstacked bars in these plots. Do the rankings appear to differ by gender? Explain.
+
+```{r}
+#For Grades
+grades_gender_percents <- prop.table(table(pop_data$grades_rank, pop_data$gender)) %>%
+                            as.data.frame()
+#Reordering Grades Variable
+grades_gender_percents$Var1 <- factor(grades_gender_percents$Var1, levels = c("1", "2", "3", "4"))
+ggplot(grades_gender_percents, aes(x = Var1, y = Freq, fill = Var2))+
+  geom_bar(stat = "identity", position = "dodge", color = "grey30") +
+  labs(x = "Grades Rank", y = "Percentage of Students", title = "The Ranks Students Gave to the Goal of Grades") +
+  scale_fill_manual(values = c("boy" = "#BACCE6", "girl" = "#E0CDED")) +
+  graces_bomb_theme
+
+#For Sports
+sports_gender_percents <- prop.table(table(pop_data$sports_rank, pop_data$gender)) %>%
+                            as.data.frame()
+
+ggplot(sports_gender_percents, aes(x = Var1, y = Freq, fill = Var2))+
+  geom_bar(stat = "identity", position = "dodge", color = "grey30") + 
+  labs(x = "Sports Rank", y = "Percentage of Students", title = "The Ranks Students Gave to the Goal of Sports") +
+  scale_fill_manual(values = c("boy" = "#BACCE6", "girl" = "#E0CDED"))+
+  graces_bomb_theme
+
+#For Looks
+looks_gender_percents <- prop.table(table(pop_data$looks_rank, pop_data$gender)) %>%
+                            as.data.frame()
+
+ggplot(looks_gender_percents, aes(x = Var1, y = Freq, fill = Var2))+
+  geom_bar(stat = "identity", position = "dodge", color = "grey30") +
+  labs(x = "Looks Rank", y = "Percentage of Students", title = "The Ranks Students Gave to the Goal of Looks") +
+  scale_fill_manual(values = c("boy" = "#BACCE6", "girl" = "#E0CDED"))+
+  graces_bomb_theme
+
+#For Money
+money_gender_percents <- prop.table(table(pop_data$money_rank, pop_data$gender)) %>%
+                            as.data.frame()
+
+ggplot(money_gender_percents, aes(x = Var1, y = Freq, fill = Var2))+
+  geom_bar(stat = "identity", position = "dodge", color = "grey30") +
+  labs(x = "Income Rank", y = "Percentage of Students", title = "The Ranks Students Gave to the Goal of Income")+
+  scale_fill_manual(values = c("boy" = "#BACCE6", "girl" = "#E0CDED"))+
+  graces_bomb_theme
+```
+
+EXPLAIN: The rankings for each variable does seem to differ by gender, except for income. More girls than boys put grades as their first choice, but both genders seem to put grades most often as their 2nd, 3rd, or 4th choice. Many more boys ranked sports as their top variable than girls. The boys distribution with sports has a negative correlation to rank as the girls distribution appears more normal with the most girls ranking sports as their 2nd top choice followed by 3rd, 1st and 4th choice. Overall, girls ranked looks as their top variable as boys ranked looks most often as their 2nd choice, followed by 3rd, 4th, and 1st. Lastly, income was ranked very similary across both genders, with most of the students ranking income as their least important variable.
+
+
+5) Are there any unusually young or old students in this sample? Compute the fences to determine what qualifies as unusually young or old. Use them to filter the dataset and print only those cases.
+
+```{r}
+print(fivenum(pop_data$age))
+IQR <-1
+lowerfence <- fivenum(pop_data$age)[2]- 1.5
+upperfence <- fivenum(pop_data$age)[4]+ 1.5
+
+popular <- pop_data %>%
+  filter(age < lowerfence | age > upperfence)
+print(popular)
+
+```
+
+
+<hr>
+
+```{r}
+sessionInfo()
+```
+

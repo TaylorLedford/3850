@@ -1,0 +1,172 @@
+---
+title: "Vietnam Draft, Part 2"
+author: "Grace Rogers, Kelsey Sheehan, Taylor Ledford"
+date: 'Updated: `r format(Sys.time(), "%A, %B %d, %Y @ %X")`'
+output: 
+  html_document: 
+    highlight: textmate
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = "")
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+```{r, echo=FALSE}
+# load all packages and datasets here
+library(tidyverse)
+selective <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/vietnamdraft.csv")
+chisq.teststat <-function(Obs)
+{ 
+  Exp <- outer(rowSums(Obs),colSums(Obs))/sum(Obs)
+  sum((Obs-Exp)^2/Exp)
+}
+```
+
+<hr>
+
+For all tests, write the null and alternative hypotheses, report the test statistic and the p-value, state whether or not you reject the null hypothesis, and then give your conclusion in terms of the original question.
+
+1) Perform both a traditional and a permutation hypothesis to determine whether the mean draft number for the second half of the year and the mean draft number for the first half of the year are significantly different. If so, which mean is smaller?
+
+Ho: The true difference in mean draft numbers for the first half and second half of the year is zero. 
+
+Ha: The true difference im mean draft numbers for the first half and second half of the year is not zero.
+
+Traditional Test:
+```{r}
+# test code here
+t.test(selective$num1970 ~ selective$halfyear)
+
+```
+
+Permutation Test:
+```{r}
+# test code here
+N <- 10^5 - 1
+permMeanDiff <- numeric(N)
+
+testdata <- selective$num1970
+obsMeanDiff <- 206.3242 - 160.9239
+for (i in 1:N){
+   index <- sample(366, 182)
+   first <- testdata[index]
+   second <- testdata[-index]
+   permMeanDiff[i] <- mean(first) - mean(second)
+}
+
+ggplot(NULL, aes(x = permMeanDiff)) + 
+  geom_histogram(bins = 30, fill = "lightblue") + 
+  geom_vline(xintercept = obsMeanDiff, color = "red") +
+  labs(title = "Resampling Mean Differences")
+
+# two-tail test with Ha: mu_b =/= mu_g
+pvalue.lower <- (sum(permMeanDiff <= obsMeanDiff) + 1) / (N + 1)
+pvalue.upper <- (sum(permMeanDiff >= obsMeanDiff) + 1) / (N + 1)
+pvalue.twotail <- 2 * min(pvalue.lower,pvalue.upper)
+
+
+
+sprintf("The pvalue of the permutation resampling test is :%f.", pvalue.twotail)
+```
+
+Conclusions: Both p values show strong evidence against the null hypothesis at an aplha level of .00005. Our findings in part one show the data within the first and second half of the year are normally distributed with no outliers in either half of the year. The drawings should also be independent, so the difference of means test should be a valid test to use in this setting.
+
+
+2) As noted above, the largest draft number called up for service in 1970 was 195. Perform a both a traditional and permutation hypothesis to determine whether the the second half of the year had a significantly larger proportion of draft numbers that were less than or equal to 195 compared to the first half of the year. 
+
+Ho: 
+
+Ha: 
+
+Traditional Test:
+```{r}
+selective <- selective %>% 
+  mutate(testcategories = case_when(num1970 <= 195  ~ 'below 195',
+                                    num1970 > 195 ~ 'above 195'))
+
+prop.test(table(selective$halfyear, selective$testcategories))
+```
+
+Permutation Test:
+```{r}
+Observed <- table(selective$halfyear, selective$testcategories)
+print(Observed)
+round(prop.table(Observed, 1), 2)
+
+obs.diff <- chisq.teststat(Observed)
+
+Expected <- outer(rowSums(Observed),colSums(Observed))/sum(Observed)
+print(Expected)
+
+prop.table(Observed, 1)
+
+halfyear    <- subset(selective, select=halfyear, drop=T)
+testcategories <- subset(selective, select=testcategories, drop=T)
+
+
+N <- 10^4-1
+random.diff<-numeric(N)
+for (i in 1:N)
+{
+  HALF.perm <- sample(halfyear)
+  RANDOM.table <- table(testcategories, HALF.perm)
+  random.diff[i]<-chisq.teststat(RANDOM.table)
+}
+
+print(paste("The chi-square test statistic is ", round(obs.diff,4), ".", sep=""),quote=F)
+print(paste("The p-value for the test of independence is ", format((sum(random.diff >= obs.diff) + 1)/(N + 1),scientific=F), ".", sep=""),quote=F)
+```
+
+Conclusions:
+
+3) The overall distribution of draft numbers is discrete uniform. If the process was truly random, then the distribution of draft numbers in each half of the year should also be essentially uniform as well. Perform a goodness of fit test to determine whether draft numbers in the second half of the year are uniformly distributed.
+
+Ho: The draft numbers in the second half of the year are uniformly distributed.
+
+Ha: The draft numvers in the second half of the year are not uniformly distributed.
+
+Traditional Test:
+```{r}
+# test code here
+observed1 <- table(selective$num1970)
+print(observed1)
+prop.table(observed1)
+
+ggplot(selective, aes(x = num1970)) + 
+  geom_bar() +
+  geom_hline(yintercept = sum(observed1)/length(observed1), col = "red")
+
+
+chisq.test(table(selective$num1970))
+
+selective2 <- selective %>% 
+  filter(halfyear == "Second") %>%
+  mutate(testcategories = case_when(num1970 >= 1  & num1970 <= 61  ~ '1 to 61',
+                                    num1970 >= 61  & num1970 <= 122 ~ '61 to 122',
+                                    num1970 >= 123 & num1970 <= 183 ~ '123 to 183',
+                                    num1970 >= 184 & num1970 <= 244 ~ '184 to 244',
+                                    num1970 >= 245 & num1970 <= 305 ~ '245 to 305',
+                                    num1970 >= 306  & num1970 <= 366 ~ '306 to 366'))
+observed2 <- table(selective2$testcategories)
+ggplot(selective2, aes(x = testcategories)) +
+  geom_bar()+
+  graces_bomb_theme
+prop.table(observed2)
+chisq.test(observed2)
+
+```
+
+Conclusions: There is not enough evidence to reject the null on an alpha level of .10. A pvalue of .1181 suggests some variation from a uniform distribution. This variation can be seen in the bar plot but due to there being six groupings, the degress of freedom are five which leads to a lot more caution in rejecting the null.
+
+
+4) How do your analyses support the assertion that the draft was unfair? Why are they not _proof_ of unfairness?
+
+ANSWER:
+
+
+<hr>
+
+END PART 2

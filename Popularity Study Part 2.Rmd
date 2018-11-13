@@ -1,0 +1,160 @@
+---
+title: "Popularity Study, Part 2"
+author: "PUT THE NAMES OF ALL GROUP MEMBERS HERE"
+date: 'Updated: `r format(Sys.time(), "%A, %B %d, %Y @ %X")`'
+output: 
+  html_document: 
+    highlight: textmate
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = "")
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+```{r, echo=FALSE}
+# load all packages and datasets here
+library(tidyverse)
+pop_data <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/popular.csv")
+chisq.teststat <-function(Obs)
+{ 
+  Exp <- outer(rowSums(Obs),colSums(Obs))/sum(Obs)
+  sum((Obs-Exp)^2/Exp)
+}
+```
+
+<hr>
+
+For all tests, write the null and alternative hypotheses, report the test statistic and the p-value, state whether or not you reject the null hypothesis, and then give your conclusion in terms of the original question.
+
+1) Researchers chose their sample with the goal of having about 1/3 of  students come from each school district type. Were they successful? Perform a goodness of fit test. If they weren't successful, which districts have too many or two few students selected?
+
+Ho: Students are distributed by 1/3 among each district type.
+
+Ha: Some district has too many or too few students selected.
+
+Traditional Test:
+```{r}
+obs <- table(pop_data %>%
+  count(district_type))
+
+M <- mean(obs)
+S <- sd(pop_data$district_type)
+
+pop_data <- pop_data %>% mutate(normtestcats = case_when(district_type <= M - 2*S ~ "C1",
+                                                       district_type <= M - 1*S & district_type > M - 2*S ~ "C2",
+                                                       district_type <= M - 0*S & district_type > M - 1*S ~ "C3",
+                                                       district_type <= M + 1*S & district_type > M - 0*S ~ "C4",
+                                                       district_type <= M + 2*S & district_type > M + 1*S ~ "C5",
+                                                       district_type >  M + 2*S ~ "C6"))
+
+prop.table(obs)
+
+probs <- c(pnorm(-2), 
+           pnorm(-1) - pnorm(-2), 
+           pnorm(0) - pnorm(-1), 
+           pnorm(1) - pnorm(0), 
+           pnorm(2) - pnorm(1), 
+           pnorm(2, lower.tail=F))
+
+expected <- probs * sum(obs)
+
+testStat <- sum((obs - expected)^2 / expected)
+DF <- length(obs) - 3
+pvalue <- pchisq(testStat, DF, lower.tail = FALSE)
+
+## We reject the Null Hypothesis since the p-value is less than .05
+
+```
+
+Conclusions:
+
+
+2) Perform a permutation hypothesis test to determine whether there is there a statistically significant relationship between gender and top goal. If so, what is the nature of the relationship?
+
+Ho: 
+
+Ha: 
+
+Permutation Test:
+```{r}
+Observed <- table(pop_data$gender, pop_data$top_goal)
+print(Observed)
+round(prop.table(Observed, 1), 2)
+
+obs.diff <- chisq.teststat(Observed)
+
+Expected <- outer(rowSums(Observed),colSums(Observed))/sum(Observed)
+print(Expected)
+
+prop.table(Observed, 1)
+
+gender    <- subset(pop_data, select=gender, drop=T)
+top_goal <- subset(pop_data, select=top_goal, drop=T)
+
+
+N <- 10^4-1
+random.diff<-numeric(N)
+for (i in 1:N)
+{
+  GEN.perm <-sample(gender)
+  RANDOM.table <- table(top_goal, GEN.perm)
+  random.diff[i]<-chisq.teststat(RANDOM.table)
+}
+
+print(paste("The chi-square test statistic is ", round(obs.diff,4), ".", sep=""),quote=F)
+print(paste("The p-value for the test of independence is ", format((sum(random.diff >= obs.diff) + 1)/(N + 1),scientific=F), ".", sep=""),quote=F)
+```
+
+Conclusions:
+
+
+3) Given the sampling strategy the researchers used in this study, we could consider each type of school district to be a separate population. Perform a traditional hypothesis test to determine whether the distribution of top goal is the same in all three types of school district. If not, in what ways do the district types differ?
+
+Ho: 
+
+Ha: 
+
+Traditional Test:
+```{r}
+Observed <- table(pop_data$district_type, pop_data$top_goal)
+print(Observed)
+round(prop.table(Observed, 1), 2)
+
+obs.diff <- chisq.teststat(Observed)
+
+Expected <- outer(rowSums(Observed),colSums(Observed))/sum(Observed)
+print(Expected)
+
+prop.table(Observed, 1)
+
+district_type    <- subset(pop_data, select=district_type, drop=T)
+top_goal <- subset(pop_data, select=top_goal, drop=T)
+
+
+N <- 10^4-1
+random.diff<-numeric(N)
+for (i in 1:N)
+{
+  DIS.perm <-sample(district_type)
+  RANDOM.table <- table(top_goal, DIS.perm)
+  random.diff[i]<-chisq.teststat(RANDOM.table)
+}
+
+print(paste("The chi-square test statistic is ", round(obs.diff,4), ".", sep=""),quote=F)
+print(paste("The p-value for the test of independence is ", format((sum(random.diff >= obs.diff) + 1)/(N + 1),scientific=F), ".", sep=""),quote=F)
+
+```
+
+Conclusions:
+
+
+4) A chi-square test shows that the three types of school districts do not have the same proportions of boys and girls (p = 0.0024). How might this affect your tests and conclusions in (2) and (3)?
+
+ANSWER:
+
+<hr>
+
+END PART 2

@@ -1,0 +1,137 @@
+---
+title: "Digital Communication, Part 1"
+author: "Taylor Ledford, James Brown, Grace Rogers"
+date: 'Updated: `r format(Sys.time(), "%A, %B %d, %Y @ %X")`'
+output: 
+  html_document: 
+    highlight: textmate
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = "")
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+```{r, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(scales)
+```
+
+<hr>
+
+1) A 1000 Mbit/s system transmits 10^9 bits per second. If each bit has a 1% chance of being incorrectly received, how many errors per second would we expect to get? What is the standard deviation in the number of errors?
+
+```{r}
+ErrorsPerSec <- 10^9 * .01
+ErrorsPerSec
+sqrt(ErrorsPerSec*(1-.01))
+```
+
+
+2) Let X be the number of bits in a single TRC block correctly received. Compute the pmf of X. Display the results in a tibble and a plot. Color the bars corresponding to "majority" red. What is the probability that any single TRC block (e.g., 000) is interpreted correctly?
+
+```{r}
+pmf <- dbinom(0:3, 3, .99)
+tibble(pmf)
+df <- data.frame(x = 0:3, p = dbinom(0:3, 3, .99))
+shade2 <- ifelse(df$x >= 2, "red", "blue")
+ggplot(df, aes(x = x, y = p)) +
+  geom_bar(stat = "identity", width = 1, fill = shade2, col = "gray") +
+  labs(title = "Probability Distribution of X", subtitle = "x >= 2 shaded in red", y = "PMF(x)") +
+  theme_classic()
+prob2 <- 1-pbinom(1,3,.99)
+prob2
+```
+
+
+3) Suppose we have a parallel system that lets us transmit 10^9^ bits per second using TRC. How many errors per second would we expect to get? What percentage reduction does this represent compared to the single-bit system?
+
+```{r}
+errors <- (1-prob2)*10^9
+errors
+errorPercent1 <- 10^7/10^9
+errorPercent3 <- errors/10^9
+percent(errorPercent1-errorPercent3)
+```
+
+
+4) In the ASCII representation of the alphabet, each letter is coded using a permutation of eight 0’s and 1’s. For example, J = 01001010. If we transmit a letter using the TRC system, what is the probability the letter will be interpreted correctly?
+
+```{r}
+prob4 <- 1-pbinom(7, 8, prob2)
+prob4
+```
+
+
+5) Modify the code below to display the ASCII representation of the last name of each member of your group. What is the probability that each name would be correctly interpreted at the receiving end (i.e., there are no mistakes in any letter)?
+
+```{r}
+require(gtools)
+require(broman)
+require(BMS)
+NAMELET  <- c("L", "e", "d", "f", "o", "r", "d")
+n        <- length(NAMELET)
+NAMEHEX  <- convert2hex(asc(NAMELET))
+NAMEBIN  <- matrix(rep(0,n*8),ncol=8)
+for (i in 1:n) {
+    NAMEBIN[i,1:8] <- hex2bin(NAMEHEX[i])
+}
+rownames(NAMEBIN) <- NAMELET
+colnames(NAMEBIN) <- c("Bit1","Bit2","Bit3","Bit4","Bit5","Bit6","Bit7","Bit8")
+print(NAMEBIN)
+
+require(gtools)
+require(broman)
+require(BMS)
+NAMELET  <- c("R", "o", "g", "e", "r", "s")
+n        <- length(NAMELET)
+NAMEHEX  <- convert2hex(asc(NAMELET))
+NAMEBIN  <- matrix(rep(0,n*8),ncol=8)
+for (i in 1:n) {
+    NAMEBIN[i,1:8] <- hex2bin(NAMEHEX[i])
+}
+rownames(NAMEBIN) <- NAMELET
+colnames(NAMEBIN) <- c("Bit1","Bit2","Bit3","Bit4","Bit5","Bit6","Bit7","Bit8")
+print(NAMEBIN)
+
+require(gtools)
+require(broman)
+require(BMS)
+NAMELET  <- c("B", "r", "o", "w", "n")
+n        <- length(NAMELET)
+NAMEHEX  <- convert2hex(asc(NAMELET))
+NAMEBIN  <- matrix(rep(0,n*8),ncol=8)
+for (i in 1:n) {
+    NAMEBIN[i,1:8] <- hex2bin(NAMEHEX[i])
+}
+rownames(NAMEBIN) <- NAMELET
+colnames(NAMEBIN) <- c("Bit1","Bit2","Bit3","Bit4","Bit5","Bit6","Bit7","Bit8")
+print(NAMEBIN)
+
+prob5L <- 1-pbinom(55, 56, prob2)
+prob5L
+prob5R <- 1-pbinom(47, 48, prob2)
+prob5R
+prob5B <- 1-pbinom(39, 40, prob2)
+prob5B
+```
+
+
+6) We plan to transmit the 1,444 characters of Lincoln's Gettysburg Address (Bliss version), which includes letters, spaces between words, and punctuation. A space or punctuation is treated exactly like a letter; e.g., the code for a space is 00100000. How many character errors should we expect to get? What is the standard deviation in the number of errors?
+
+```{r}
+errorMargin <- 1-prob4
+NumError6 <- 1444*(errorMargin)
+NumError6
+sqrt(NumError6*(1-errorMargin))
+```
+
+
+<hr>
+
+```{r}
+sessionInfo()
+```

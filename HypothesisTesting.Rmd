@@ -35,16 +35,16 @@ permMeanDiff <- numeric(N)
 testdata <- Delays$Delay
 
 for (i in 1:N){
-   index <- sample(4029, 1123)
-   UA <- testdata[index]
-   AA <- testdata[-index]
-   permMeanDiff[i] <- mean(UA) - mean(AA)
+   index <- sample(4029, 2906)
+   AA <- testdata[index]
+   UA <- testdata[-index]
+   permMeanDiff[i] <- mean(AA) - mean(UA)
 }
 
-ggplot(NULL, aes(x = permMeanDiff)) + 
-  geom_histogram(bins = 30, fill = "lightblue") + 
-  geom_vline(xintercept = obsMeanDiff, color = "red") +
-  labs(title = "Resampling Mean Differences")
+# ggplot(NULL, aes(x = permMeanDiff)) + 
+#   geom_histogram(bins = 30, fill = "lightblue") + 
+#   geom_vline(xintercept = obsMeanDiff, color = "red") +
+#   labs(title = "Resampling Mean Differences")
 
 # lower tail test with Ha: mu_b < mu_g
 
@@ -90,7 +90,7 @@ permPropDiff <- numeric(N)
 testdata2 <- Delays$Delayed30
 
 for (i in 1:N){
-   index <- sample(4029, 1123)
+   index <- sample(4029, 2906)
    UA <- testdata2[index]
    AA  <- testdata2[-index]
    permPropDiff[i] <- mean(UA == "Yes") - mean(AA == "Yes")
@@ -113,8 +113,8 @@ pvalue.upper <- (sum(permPropDiff >= obsPropDiff) + 1) / (N + 1)
 
 pvalue.twotail <- 2 * min(pvalue.lower, pvalue.upper)
 
-data.frame(alternative = c("Upper-Tail"),
-           pvalue      = c(pvalue.upper))
+data.frame(alternative = c("Lower-Tail"),
+           pvalue      = c(pvalue.lower))
 ```
 
 
@@ -128,6 +128,7 @@ summary3 <- Delays %>%
   summarize(sd=sd(Delay), variance=sd^2)
 
 obsVarRatio <- summary3[1, "variance"] / summary3[2, "variance"]
+obsVarRatio
 
 table3 <- table(summary3$Carrier, summary3$variance)
 
@@ -139,10 +140,10 @@ permVarDiff <- numeric(N)
 testdata3 <- Delays$Delay
 
 for (i in 1:N){
-   index <- sample(4029, 1123)
+   index <- sample(4029, 2906)
    UA <- testdata3[index]
    AA  <- testdata3[-index]
-   permVarDiff[i] <- mean(UA) / mean(AA)
+   permVarDiff[i] <- var(UA) / var(AA)
 }
 
 ggplot(NULL, aes(x = permVarDiff)) + 

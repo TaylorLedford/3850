@@ -1,0 +1,101 @@
+```{r}
+library(tidyverse)
+
+galtonhts <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/galtonheightdata.csv")
+
+# Ho: father galtonhts are distributed N(69, 2.5^2)
+# Ha: father galtonhts are not distributed N(69, 2.5^2)
+
+# we build categories for the data using the 
+# Empirical Rule and hypothesized parameters
+# this is not the only way to categorize...
+
+mu <- 69
+sigma <- 2.5
+
+galtonhts <- galtonhts %>% 
+  mutate(normtestcats = case_when(Father <= mu - 2*sigma ~ "C1",
+                                  Father <= mu - 1*sigma & Father > mu - 2*sigma ~ "C2",
+                                  Father <= mu - 0*sigma & Father > mu - 1*sigma ~ "C3",
+                                  Father <= mu + 1*sigma & Father > mu - 0*sigma ~ "C4",
+                                  Father <= mu + 2*sigma & Father > mu + 1*sigma ~ "C5",
+                                  Father >  mu + 2*sigma ~ "C6"))
+
+observed <- table(galtonhts$normtestcats)
+prop.table(observed)
+
+# Find theoretical probabilities for the intervals.
+
+probs <- c(pnorm(-2), 
+           pnorm(-1) - pnorm(-2), 
+           pnorm(0) - pnorm(-1), 
+           pnorm(1) - pnorm(0), 
+           pnorm(2) - pnorm(1), 
+           pnorm(2, lower.tail=F))
+
+probs * sum(observed)
+chisq.test(observed, p = probs)
+
+# we can explore using the graphing tools we learned before
+# but make some adjustments because we specify mu and sigma
+
+ggplot(galtonhts, aes(x = Father)) + 
+  geom_density() +
+  stat_function(fun = dnorm, args = list(mu, sigma), color = "red")
+
+ggplot(galtonhts, aes(x = Father)) + 
+  stat_ecdf() +
+  stat_function(fun = pnorm, args = list(mu, sigma), color = "red")
+
+
+ggplot(galtonhts, aes(sample = Father)) + 
+  stat_qq() +
+  geom_abline(intercept = mu, slope = sigma, color = "red")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Ho: mother galtonhts are normally distributed
+# Ha: mother galtonhts are not normally distributed
+
+M <- mean(galtonhts$Mother)
+S <- sd(galtonhts$Mother)
+
+galtonhts <- galtonhts %>% mutate(normtestcats = case_when(Mother <= M - 2*S ~ "C1",
+                                                       Mother <= M - 1*S & Mother > M - 2*S ~ "C2",
+                                                       Mother <= M - 0*S & Mother > M - 1*S ~ "C3",
+                                                       Mother <= M + 1*S & Mother > M - 0*S ~ "C4",
+                                                       Mother <= M + 2*S & Mother > M + 1*S ~ "C5",
+                                                       Mother >  M + 2*S ~ "C6"))
+
+observed <- table(galtonhts$normtestcats)
+prop.table(observed)
+
+probs <- c(pnorm(-2), 
+           pnorm(-1) - pnorm(-2), 
+           pnorm(0) - pnorm(-1), 
+           pnorm(1) - pnorm(0), 
+           pnorm(2) - pnorm(1), 
+           pnorm(2, lower.tail=F))
+
+expected <- probs * sum(observed)
+
+testStat <- sum((observed - expected)^2 / expected)
+DF <- length(observed) - 3
+pvalue <- pchisq(testStat, DF, lower.tail = FALSE)
+
+print(testStat)
+print(pvalue)
+
+ggplot(galtonhts, aes(x = Mother)) + 
+  geom_density() +
+  stat_function(fun = dnorm, args = list(M, S), color = "red")
+
+ggplot(galtonhts, aes(x = Mother)) + 
+  stat_ecdf() +
+  stat_function(fun = pnorm, args = list(M, S), color = "red")
+
+ggplot(galtonhts, aes(sample = Mother)) + 
+  stat_qq() +
+  stat_qq_line(color = "red")
+```

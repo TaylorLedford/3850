@@ -1,0 +1,107 @@
+---
+title: "Digital Communication, Part 2"
+author: "PUT THE NAMES OF ALL GROUP MEMBERS HERE"
+date: 'Updated: `r format(Sys.time(), "%A, %B %d, %Y @ %X")`'
+output: 
+  html_document: 
+    highlight: textmate
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = "")
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+```{r, echo=FALSE}
+library(tidyverse)
+graces_bomb_theme <-  theme(panel.background = element_rect(fill = "grey70"))+
+  theme(text=element_text(family = "Palatino"))
+```
+
+<hr>
+
+1) In Part 1, you analyzed error rates for a single-channel system and a TRC system. One way to reduce transmission errors in either system would be to improve the initial 1% error rate. How much would reducing the error rate improve the performance of the TRC system? Create a plot that shows error rates from 0% to 1% (in increments of 0.1) on the x-axis versus the corresponding probability that any single TRC block (e.g., 000) is interpreted correctly (y-axis). To what value do we have to reduce the initial error rate in order for the probability of a block being correctly transmitted to be at least 99.99%?
+
+```{r}
+a <- seq(0, .01, by = .001)
+ErrorsPerSec <- 10^9 * a
+
+ggplot(NULL, aes(x = a, y = ErrorsPerSec)) +
+  geom_bar(stat = "identity") +
+  graces_bomb_theme +
+  scale_fill_manual(values = "#F0A8A3")
+
+10^9 * .0001
+print("The inital error needs to be reduced to .0001")
+```
+
+ANSWER: 
+
+
+2) A 1000 Mbit/s system transmits 10^9^ bits per second. Each bit has a 0.03% chance of being incorrectly received when we use TRC and all bits are independent. There are are 86,400 seconds in a day. If X is the number of incorrect bits in a single second, use `rbinom` to simulate the distribution of X for a single day. Assess your simulation results for normality using a density plot, ECDF plot, QQ plot, and goodness of fit test. What do you conclude?
+
+Simulation:
+```{r}
+prob <- rbinom(86400,10^9,.0003) %>%
+  as.data.frame()
+
+M <- mean(prob$.)
+S <- sd(prob$.)
+
+prob <- prob %>% mutate(normtestcats = case_when(. <= M - 2*S ~ "C1",
+                                                 . <= M - 1*S & . > M - 2*S ~ "C2",
+                                                 . <= M - 0*S & . > M - 1*S ~ "C3",
+                                                 . <= M + 1*S & . > M - 0*S ~ "C4",
+                                                 . <= M + 2*S & . > M + 1*S ~ "C5",
+                                                 . >  M + 2*S ~ "C6"))
+
+ggplot(prob, aes(x = .)) + 
+  geom_density() +
+  stat_function(fun = dnorm, args = list(M, S), color = "#F5CB9B") +
+  theme_classic()
+
+ggplot(prob, aes(x = .)) + 
+  stat_ecdf() +
+  stat_function(fun = pnorm, args = list(M, S), color = "#E0CDED") +
+  theme_classic()
+
+ggplot(prob, aes(sample = .)) + 
+  stat_qq() +
+  stat_qq_line(color = "#BACCE6") +
+  theme_classic()
+```
+
+Ho: X is normal distributed.
+
+Ha: X is not normal distributed.
+
+Goodness of Fit Test:
+```{r}
+observed <- table(prob$normtestcats)
+prop.table(observed)
+
+probs <- c(pnorm(-2), 
+           pnorm(-1) - pnorm(-2), 
+           pnorm(0) - pnorm(-1), 
+           pnorm(1) - pnorm(0), 
+           pnorm(2) - pnorm(1), 
+           pnorm(2, lower.tail=F))
+
+expected <- probs * sum(observed)
+
+testStat <- sum((observed - expected)^2 / expected)
+DF <- length(observed) - 3
+pvalue <- pchisq(testStat, DF, lower.tail = FALSE)
+
+print(testStat)
+print(pvalue)
+```
+
+Conclusions: From the graphs X looks to be a strong normal distribution, and our p-value indicates that with a value of . 
+
+
+<hr>
+
+END PART 2

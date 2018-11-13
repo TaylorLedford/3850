@@ -1,0 +1,260 @@
+---
+title: "Hypothesis Testing: Chi-Square tests"
+author: "Taylor Ledford"
+date: "`r Sys.time()`"
+output: html_document
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+
+### Problem 1
+
+* Dataset: https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/mmFEB2015.csv
+* Description: https://stat-jet-asu.github.io/Datasets/InstructorDescriptions/mmFEB2015.html
+
+Are legal gay marriage and legal marijuana use independent for states in the US? If not, what seems to be the nature of the relationship? Perform both a traditional chi-square test and a permutation test. 
+
+Most states that allowed gay marriage also allowed legal marijuana as well as most states that did not allow one, did not allow the other. One flaw in this is that a state that allowed one could be in the process to allow the other.
+```{r}
+legal <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/mmFEB2015.csv")
+
+marriage    <- legal$marriage
+marijuana <- legal$marijuana
+
+# Select the two variables we want to test and make a table
+Observed <- table(marriage,marijuana)
+print(Observed)
+
+
+# What kind of table would we expect to see if Ho is true?
+
+Expected <- outer(rowSums(Observed),colSums(Observed))/sum(Observed)
+
+# Create a new function to compute the chi-squared test statistic
+# The function's name is chisq, the required input is a data table 
+# Obs(erved) is the observed data table; variables are defined later
+# Exp(ected) is a contingency table computed from the Observed data
+# Outer is the outer product of two vectors, which makes a matrix
+# http://en.wikipedia.org/wiki/Outer_product
+
+chisq.teststat <- function(Obs){ 
+  Exp <- outer(rowSums(Obs),colSums(Obs))/sum(Obs)
+  sum((Obs-Exp)^2/Exp)
+}
+
+obs.diff <- chisq.teststat(table(marriage,marijuana))
+
+# Resampling permutation test loop and graph of results
+# Start with selecting the two variables to be analyzed
+
+N <- 10^4-1
+random.diff<-numeric(N)
+
+for (i in 1:N){
+  STATUS.perm <-sample(marijuana)
+  RANDOM.table <- table(marriage, STATUS.perm)
+  random.diff[i]<-chisq.teststat(RANDOM.table)
+}
+
+# Graph the null distribution of the test statistic
+
+hist(random.diff, prob=T,
+     main="Null Distribution of Chi-Square Test Statistic",
+     xlab="randomly generated chi-square statistics", 
+     xlim=c(0,max(max(random.diff),obs.diff)),
+     ylim=c(0,1))
+abline(v=obs.diff,
+       col="blue",
+       lty=5)  
+
+# Print the test statistic and p-value
+# The p-value is (sum(random.diff >= obs.diff) + 1)/(N + 1) 
+print(paste("The chi-square test statistic is ", round(obs.diff,4), ".", sep=""),quote=F)
+print(paste("The p-value for the test of independence is ", format((sum(random.diff >= obs.diff) + 1)/(N + 1),scientific=F), ".", sep=""),quote=F)
+
+table <- table(marriage, marijuana)
+prop.table(table)
+```
+
+
+### Problem 2
+
+Consider the Flight Delays dataset. Is the distribution of flights throughout the week (i.e., number of flights each day) the same for AA and UA? If not, how do they differ? Perform both a traditional chi-square test and a permutation test.
+
+Although American Airlines has more flights per day, the distribution of flights thorughout the week are relatively the same.
+
+```{r}
+Flights <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Chihara/FlightDelays.csv")
+
+carrier <- Flights$Carrier
+day <- Flights$Day
+
+# Select the two variables we want to test and make a table
+Observed <- table(day,carrier)
+print(Observed)
+
+
+# What kind of table would we expect to see if Ho is true?
+
+Expected <- outer(rowSums(Observed),colSums(Observed))/sum(Observed)
+
+# Create a new function to compute the chi-squared test statistic
+# The function's name is chisq, the required input is a data table 
+# Obs(erved) is the observed data table; variables are defined later
+# Exp(ected) is a contingency table computed from the Observed data
+# Outer is the outer product of two vectors, which makes a matrix
+# http://en.wikipedia.org/wiki/Outer_product
+
+chisq.teststat <- function(Obs){ 
+  Exp <- outer(rowSums(Obs),colSums(Obs))/sum(Obs)
+  sum((Obs-Exp)^2/Exp)
+}
+
+obs.diff <- chisq.teststat(table(day,carrier))
+
+# Resampling permutation test loop and graph of results
+# Start with selecting the two variables to be analyzed
+
+N <- 10^4-1
+random.diff<-numeric(N)
+
+for (i in 1:N){
+  STATUS.perm <-sample(carrier)
+  RANDOM.table <- table(day, STATUS.perm)
+  random.diff[i]<-chisq.teststat(RANDOM.table)
+}
+
+# Graph the null distribution of the test statistic
+
+hist(random.diff, prob=T,
+     main="Null Distribution of Chi-Square Test Statistic",
+     xlab="randomly generated chi-square statistics", 
+     xlim=c(0,max(max(random.diff),obs.diff)),
+     ylim=c(0,1))
+abline(v=obs.diff,
+       col="blue",
+       lty=5)  
+
+# Print the test statistic and p-value
+# The p-value is (sum(random.diff >= obs.diff) + 1)/(N + 1) 
+print(paste("The chi-square test statistic is ", round(obs.diff,4), ".", sep=""),quote=F)
+print(paste("The p-value for the test of independence is ", format((sum(random.diff >= obs.diff) + 1)/(N + 1),scientific=F), ".", sep=""),quote=F)
+
+table <- table(day, carrier)
+prop.table(table, 2)
+```
+
+
+### Problem 3
+
+The following data are the results of 25 gas mileage readings on a given vehicle. Determine whether the population distribution of gas mileage for the vehicle is (a) N(37, 1.5^2^); and (b) normally distributed, with no specified mean and variance. 
+
+The distribution of gas mileage looks to be normal for the most part. The data doesn't stray enough from the normal distribution to reject it.
+```{r}
+gastest <- data.frame(mpg = c(38.0, 38.2, 37.1, 38.3, 40.2, 37.1, 38.6, 41.2, 35.8, 37.9, 36.5, 37.7, 39.5, 35.0, 37.3, 35.6, 33.1, 37.8, 38.4, 37.6, 38.8, 36.6, 36.9, 34.2, 36.8))
+
+# Ho: mpg gastest are distributed N(69, 2.5^2)
+# Ha: mpg gastest are not distributed N(69, 2.5^2)
+
+# we build categories for the data using the 
+# Empirical Rule and hypothesized parameters
+# this is not the only way to categorize...
+
+mu <- 37
+sigma <- 1.5
+
+gastest <- gastest %>% 
+  mutate(normtestcats = case_when(mpg <= mu - 2*sigma ~ "C1",
+                                  mpg <= mu - 1*sigma & mpg > mu - 2*sigma ~ "C2",
+                                  mpg <= mu - 0*sigma & mpg > mu - 1*sigma ~ "C3",
+                                  mpg <= mu + 1*sigma & mpg > mu - 0*sigma ~ "C4",
+                                  mpg <= mu + 2*sigma & mpg > mu + 1*sigma ~ "C5",
+                                  mpg >  mu + 2*sigma ~ "C6"))
+
+observed <- table(gastest$normtestcats)
+prop.table(observed)
+
+# Find theoretical probabilities for the intervals.
+
+probs <- c(pnorm(-2), 
+           pnorm(-1) - pnorm(-2), 
+           pnorm(0) - pnorm(-1), 
+           pnorm(1) - pnorm(0), 
+           pnorm(2) - pnorm(1), 
+           pnorm(2, lower.tail=F))
+
+probs * sum(observed)
+chisq.test(observed, p = probs)
+
+# we can explore using the graphing tools we learned before
+# but make some adjustments because we specify mu and sigma
+
+ggplot(gastest, aes(x = mpg)) + 
+  geom_density() +
+  stat_function(fun = dnorm, args = list(mu, sigma), color = "red")
+
+ggplot(gastest, aes(x = mpg)) + 
+  stat_ecdf() +
+  stat_function(fun = pnorm, args = list(mu, sigma), color = "red")
+
+
+ggplot(gastest, aes(sample = mpg)) + 
+  stat_qq() +
+  geom_abline(intercept = mu, slope = sigma, color = "red")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Ho: mpg gastest are normally distributed
+# Ha: mpg gastest are not normally distributed
+
+M <- mean(gastest$mpg)
+S <- sd(gastest$mpg)
+
+gastest <- gastest %>% mutate(normtestcats = case_when(mpg <= M - 2*S ~ "C1",
+                                                       mpg <= M - 1*S & mpg > M - 2*S ~ "C2",
+                                                       mpg <= M - 0*S & mpg > M - 1*S ~ "C3",
+                                                       mpg <= M + 1*S & mpg > M - 0*S ~ "C4",
+                                                       mpg <= M + 2*S & mpg > M + 1*S ~ "C5",
+                                                       mpg >  M + 2*S ~ "C6"))
+
+observed <- table(gastest$normtestcats)
+prop.table(observed)
+
+probs <- c(pnorm(-2), 
+           pnorm(-1) - pnorm(-2), 
+           pnorm(0) - pnorm(-1), 
+           pnorm(1) - pnorm(0), 
+           pnorm(2) - pnorm(1), 
+           pnorm(2, lower.tail=F))
+
+expected <- probs * sum(observed)
+
+testStat <- sum((observed - expected)^2 / expected)
+DF <- length(observed) - 3
+pvalue <- pchisq(testStat, DF, lower.tail = FALSE)
+
+print(testStat)
+print(pvalue)
+
+ggplot(gastest, aes(x = mpg)) + 
+  geom_density() +
+  stat_function(fun = dnorm, args = list(M, S), color = "red")
+
+ggplot(gastest, aes(x = mpg)) + 
+  stat_ecdf() +
+  stat_function(fun = pnorm, args = list(M, S), color = "red")
+
+ggplot(gastest, aes(sample = mpg)) + 
+  stat_qq() +
+  stat_qq_line(color = "red")
+```
+```
+
+
+<hr>
+
+END!!!

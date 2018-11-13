@@ -34,6 +34,7 @@ ggplot(FlightDelays, aes(x=1,y=Delay)) +
   xlab("")
 
 upperfence <- fivenum(FlightDelays$Delay)[2] + 1.5 * IQR(FlightDelays$Delay)
+upperfence
 
 NumOfOutliers <- FlightDelays %>%
   filter(Delay > upperfence) %>%
@@ -102,7 +103,7 @@ m
 Create an appropriate plot to visualize the distribution of delays by both carrier and day.
 
 ```{r}
-ggplot(data=m, aes(x=Day, y=mean, color=Carrier)) +
+ggplot(data=m, aes(x=DayR, y=mean, color=Carrier)) +
   geom_point() +
   ylab("Average Delay")
 ```

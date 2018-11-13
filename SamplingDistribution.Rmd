@@ -1,0 +1,38 @@
+---
+title: "SamplingDistribution"
+author: "Taylor Ledford"
+date: "11/8/2018"
+output: html_document
+---
+
+```{r}
+
+x1 <- rexp(10^6, 1)
+x2 <- rexp(10^6, 1)
+x3 <- rexp(10^6, 1)
+
+
+y <- x1 + x2 + x3
+d <- x1 - x2
+
+avgY <- (y)/3
+
+mean(y)
+sd(y)
+var(y)
+mean(d)
+sd(d)
+var(d)
+mean(avgY)
+sd(avgY)
+var(avgY)
+
+ggplot(NULL, aes(x=y)) +
+  geom_density()
+
+ggplot(NULL, aes(x=d)) +
+  geom_density()
+
+ggplot(NULL, aes(x=avgY)) +
+  geom_density()
+```

@@ -1,0 +1,93 @@
+---
+title: "Vietnam Draft, Part 1"
+author: "James Brown, Taylor Ledford, Grace Rogers"
+date: 'Updated: `r format(Sys.time(), "%A, %B %d, %Y @ %X")`'
+output: 
+  html_document: 
+    highlight: textmate
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = "")
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+```{r, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+selective <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/vietnamdraft.csv")
+graces_bomb_theme <-  theme(panel.background = element_rect(fill = "grey70"))+
+  theme(text=element_text(family = "Palatino"))
+options(pillar.sigfig=7)
+```
+
+<hr>
+
+1) Create a boxplot to show the overall distribution of draft numbers. Calculate the mean, standard deviation, and five-number summary and display results in a tibble.
+
+```{r}
+ggplot(data=selective, aes(x=1, y=num1970)) +
+  geom_boxplot(fill = "#BACCE6") +
+  labs(x="", y="Number of Drafts", title="Distribution of Draft Numbers") +
+  graces_bomb_theme
+
+summary1 <- selective %>%
+  summarise(mean=mean(num1970), sd=sd(num1970), minimum = fivenum(num1970)[1], Q1 = fivenum(num1970)[2], median = fivenum(num1970)[3], Q3 = fivenum(num1970)[4], maximum = fivenum(num1970)[5])
+
+as_tibble(summary1)
+```
+
+
+2) Create boxplots to compare the distributions of draft numbers by month (in order). Include a horizontal line to represent the overall mean draft number for 1970. 
+
+```{r}
+levels2 <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+selective$month <- factor(selective$month, levels = levels2)
+
+ggplot(data=selective, aes(x=month, y=num1970)) +
+  geom_boxplot(fill = "#E0CDED") +
+  geom_hline(yintercept=summary1$mean, color="blue") +
+  labs(x="Month", y="Number of Drafts", title="Distribution of Draft Numbers by Month") +
+  graces_bomb_theme
+
+```
+
+
+3) Create boxplots and density plots to compare the distributions of draft numbers by half-year. Calculate the mean, standard deviation, and five-number summary for both groups and display in a tibble.
+
+```{r}
+ggplot(selective, aes(x=halfyear, y=num1970, fill = halfyear)) +
+  geom_boxplot() +
+  labs(x="Half of the Year", y="Number of Drafts", title="Draft Numbers by Half-Year") +
+  graces_bomb_theme +
+   scale_fill_manual(values=c("#F3F3A7","#F0A8A3"))
+
+ggplot(selective, aes(x=num1970, fill=halfyear)) +
+  geom_density(alpha=0.5) +
+  labs(x="Half of the Year", y="Number of Drafts", title="Draft Numbers by Half-Year") +
+  graces_bomb_theme +
+  scale_fill_manual(values=c("#F3F3A7","#F0A8A3"))
+
+selective %>%
+  group_by(halfyear) %>%
+  summarise(mean=mean(num1970), sd=sd(num1970),  minimum = fivenum(num1970)[1], Q1 = fivenum(num1970)[2], median = fivenum(num1970)[3], Q3 = fivenum(num1970)[4], maximum = fivenum(num1970)[5])
+```
+
+
+4) In your opinion, what are two aspects of the physical process used to select the numbers in the 1970 draft lottery could cast doubt on the fairness of the results? How could they have impacted the randomness?
+
+ANSWER: The numbers being both hand-mixed and hand drawn could have impacted the randomness. The person selecting and mixing may have been trying to produce certain results, whereas in todays bingo games the machine mixing and selects the ball in an attempt to create random results.
+
+5) What information from your distribution analyses of the 1970 draft numbers could be used as evidence to cast doubt on the fairness of the results? Would the results be impossible in a fair lottery system?
+
+ANSWER: There are more drafts for birthdays in the first half of the year compared to the second half. The results are possible in a fair lottery since drawing a sample from a population would result in some variation from an exact 50/50 distribution since this is suppose to be a purely random set of results.
+
+
+<hr>
+
+```{r}
+sessionInfo()
+```
