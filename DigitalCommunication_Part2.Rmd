@@ -1,6 +1,6 @@
 ---
 title: "Digital Communication, Part 2"
-author: "PUT THE NAMES OF ALL GROUP MEMBERS HERE"
+author: "Grace Rogers, Kelsey Sheehan, Taylor Ledford"
 date: 'Updated: `r format(Sys.time(), "%A, %B %d, %Y @ %X")`'
 output: 
   html_document: 
@@ -29,9 +29,9 @@ a <- seq(0, .01, by = .001)
 ErrorsPerSec <- 10^9 * a
 
 ggplot(NULL, aes(x = a, y = ErrorsPerSec)) +
-  geom_bar(stat = "identity") +
-  graces_bomb_theme +
-  scale_fill_manual(values = "#F0A8A3")
+  geom_bar(stat = "identity", color = "#F0A8A3", fill = "#F0A8A3") +
+  theme_classic() +
+  labs(title = "Performance of TRC by Error Rate", x = "Error Rate", y = "Error Per Second")
 
 10^9 * .0001
 print("The inital error needs to be reduced to .0001")
@@ -56,21 +56,27 @@ prob <- prob %>% mutate(normtestcats = case_when(. <= M - 2*S ~ "C1",
                                                  . <= M + 1*S & . > M - 0*S ~ "C4",
                                                  . <= M + 2*S & . > M + 1*S ~ "C5",
                                                  . >  M + 2*S ~ "C6"))
+x <- prob$.
+x.q <- quantile(prob$.)
 
 ggplot(prob, aes(x = .)) + 
   geom_density() +
   stat_function(fun = dnorm, args = list(M, S), color = "#F5CB9B") +
-  theme_classic()
+  theme_classic() +
+  labs(title = "Incorrect Bits for a Day", y = "Density", x = "Incorrect Bits")
 
-ggplot(prob, aes(x = .)) + 
-  stat_ecdf() +
+ggplot(NULL, aes(x = x)) + 
+  geom_step(stat = "ecdf") +
   stat_function(fun = pnorm, args = list(M, S), color = "#E0CDED") +
-  theme_classic()
+  theme_classic() +
+  labs(title = "Incorrect Bits for a Day", y = "Fn(X)", x = "Incorrect Bits") +
+  geom_vline(aes(xintercept=x.q),linetype = "dashed")
 
 ggplot(prob, aes(sample = .)) + 
   stat_qq() +
   stat_qq_line(color = "#BACCE6") +
-  theme_classic()
+  theme_classic() +
+  labs(title = "Incorrect Bits for a Day", x = "Theoretical", y = "Sample")
 ```
 
 Ho: X is normal distributed.
@@ -80,7 +86,6 @@ Ha: X is not normal distributed.
 Goodness of Fit Test:
 ```{r}
 observed <- table(prob$normtestcats)
-prop.table(observed)
 
 probs <- c(pnorm(-2), 
            pnorm(-1) - pnorm(-2), 
@@ -99,7 +104,7 @@ print(testStat)
 print(pvalue)
 ```
 
-Conclusions: From the graphs X looks to be a strong normal distribution, and our p-value indicates that with a value of . 
+Conclusions: From the graphs X looks to be a strong normal distribution, and our p-value indicates that with a value greater than .1. 
 
 
 <hr>
