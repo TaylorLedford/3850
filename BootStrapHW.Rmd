@@ -1,0 +1,127 @@
+---
+title: "Bootstrap CIs"
+author: "Taylor Ledford"
+date: "`r Sys.time()`"
+output: html_document
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+Delays <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Chihara/FlightDelays.csv")
+Popular <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Instructor/popular.csv")
+```
+
+
+### Problem 1
+
+Consider the Flight Delays dataset discussed in Chapter 1 of the Chihara & Hesterberg textbook, which contains data on selected flights departing from LaGuardia airport in 2009. Assume the data are a representative sample of flights and use only flights with a positive delay time. 
+
+A) Compute a traditional 95% confidence interval to estimate mean delay time for flights that are delayed.
+
+```{r}
+Delays <- Delays %>%
+  filter(Delay >= 1)
+
+delay <- Delays$Delay
+
+n <- length(delay)
+
+mean(delay) + qt(c(0.025, 0.975), n-1) * sd(delay)/sqrt(n) 
+```
+
+B) Compute a 95% bootstrap percentile interval to estimte mean delay time for flights that are delayed. 
+
+```{r}
+n <- length(delay)
+N <- 10^4
+
+bootmean <- numeric(N)
+
+for (i in 1:N){
+  bootsample <- sample(delay, n, replace = TRUE)
+  bootmean[i] <- mean(bootsample)
+}
+
+quantile(bootmean, c(0.025, 0.975))
+```
+
+C) The distribution of delays is quite right skewed. Using your bootstrap distribution, determine whether the sampling distribution of the sample mean is approximately normal in this situation.
+
+ANSWER: From the graphs below the distribution of the sample mean does appear to be normal.
+
+```{r message=FALSE}
+ggplot(NULL, aes(x = bootmean)) + 
+  geom_histogram(fill = "lightblue", color = "gray") +
+  geom_vline(xintercept = mean(bootmean), color = "blue", lty = 2)
+
+ggplot(NULL, aes(sample = bootmean)) + 
+  geom_qq() + 
+  geom_qq_line(color = "red")
+
+ggplot(NULL, aes(x=bootmean)) +
+  geom_density()
+```
+
+
+### Problem 2
+
+Consider the Popular Kids dataset used in the class projects. Find a 95% bootstrap percentile interval to estimate the population proportion of kids who would choose grades as their top goal. Based on the interval, can we say with confidence that a majority of the population represented by this sample would choose grades? Explain.
+
+ANSWER: I do not think there is enough evidence to say that the majority choose grades as their top goal, but I think there is strong evidence supporting that half of the population choose grades as their top goal.
+
+```{r message=FALSE}
+Popular <- Popular %>%
+  mutate(top_goal = ifelse(top_goal == "grades", "Grades", "Not Grades"))
+
+phat <- mean(Popular$top_goal == "Grades")
+
+level <- Popular$top_goal
+
+n <- length(level)
+N <- 10^4
+
+bootprop <- numeric(N)
+
+for (i in 1:N){
+  bootsample <- sample(level, n, replace = TRUE)
+  bootprop[i] <- mean(bootsample == "Grades")
+}
+
+ggplot(NULL, aes(x = bootprop)) + 
+  geom_histogram(fill = "lightblue", color = "gray") +
+  geom_vline(xintercept = mean(bootprop), color = "blue", lty = 2)
+
+ggplot(NULL, aes(sample = bootprop)) + 
+  geom_qq() + 
+  geom_qq_line(color = "red")
+
+ggplot(NULL, aes(x=bootprop)) +
+  geom_density()
+
+quantile(bootprop, c(.025,.975))
+```
+
+
+### Problem 3
+
+For the scenario in Problem 1, compute a 95% bootstrap percentile interval for the median delay time.
+
+```{r}
+n <- length(delay)
+N <- 10^4
+
+bootmedian <- numeric(N)
+
+for (i in 1:N){
+  bootsample <- sample(delay, n, replace = TRUE)
+  bootmedian[i] <- median(bootsample)
+}
+
+quantile(bootmedian, c(0.025, 0.975))
+```
+
+
+<hr>
+
+END!!!
+

@@ -1,0 +1,87 @@
+---
+title: "BootStrap CI"
+author: "Taylor Ledford"
+date: "11/26/2018"
+output: html_document
+---
+
+```{r}
+# Arsenic is a naturally occurring element in Bangladesh groundwater,
+# which can lead to poisoning in rural populations that drink from it.
+# The dataset is samples from wells in one rural area of Bangladesh.
+# The arsenic values are reported in units of micrograms per liter.
+# In the US, 10 micrograms per liter is considered "acceptable".
+
+welldata <- read.csv("https://raw.githubusercontent.com/STAT-JET-ASU/Datasets/master/Chihara/Bangladesh.csv")
+
+library(tidyverse)
+ggplot(welldata, aes(x = Arsenic)) + geom_density()
+ggplot(welldata, aes(sample = Arsenic)) + geom_qq() + geom_qq_line()
+
+arsenic <- welldata$Arsenic
+mean(arsenic)
+sd(arsenic)
+
+n <- length(arsenic)
+N <- 10^4
+
+bootmean <- numeric(N)
+
+for (i in 1:N){
+  bootsample <- sample(arsenic, n, replace = TRUE)
+  bootmean[i] <- mean(bootsample)
+}
+
+ggplot(NULL, aes(x = bootmean)) + 
+  geom_histogram(fill = "lightblue", color = "gray") +
+  geom_vline(xintercept = mean(bootmean), color = "blue", lty = 2)
+
+ggplot(NULL, aes(sample = bootmean)) + 
+  geom_qq() + 
+  geom_qq_line(color = "red")
+
+ggplot(NULL, aes(x=bootmean)) +
+  geom_density()
+
+mean(bootmean)                 
+mean(bootmean) - mean(arsenic) 
+sd(bootmean)
+
+quantile(bootmean, c(0.025, 0.975))
+
+mean(arsenic) + qt(c(0.025, 0.975), n-1) * sd(arsenic)/sqrt(n) 
+
+t.test(arsenic)
+
+welldata <- welldata %>%
+  mutate(arsenicLevel = ifelse(Arsenic <= 10, "acceptable", "unacceptable"))
+
+phat <- mean(welldata$arsenicLevel == "unacceptable")
+
+level <- welldata$arsenicLevel
+
+n <- length(level)
+N <- 10^4
+
+bootprop <- numeric(N)
+
+for (i in 1:N){
+  bootsample <- sample(level, n, replace = TRUE)
+  bootprop[i] <- mean(bootsample == "unacceptable")
+}
+
+ggplot(NULL, aes(x = bootprop)) + 
+  geom_histogram(fill = "lightblue", color = "gray") +
+  geom_vline(xintercept = mean(bootprop), color = "blue", lty = 2)
+
+ggplot(NULL, aes(sample = bootprop)) + 
+  geom_qq() + 
+  geom_qq_line(color = "red")
+
+ggplot(NULL, aes(x=bootprop)) +
+  geom_density()
+
+quantile(bootprop, c(.025,.975))
+
+mean(level == "unacceptable") + qnorm(c(0.025, 0.975), 0, 1) * sqrt(phat *(1-phat)/n) 
+```

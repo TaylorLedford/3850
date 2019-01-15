@@ -1,0 +1,163 @@
+---
+title: "CLT Practice Problems"
+author: "Taylor Ledford"
+date: "`r Sys.time()`"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+### Problem 1
+
+A regional airline runs a popular commuter flight that holds forty passengers. Typically, the weights of each individual passenger plus his or her baggage are approximately normally distributed with a mean of 210 pounds and a standard deviation of 25 pounds.
+
+A) What is the probability that an individual passenger's weight (with baggage) exceeds 220 pounds?
+
+```{r}
+mean <- 210
+variance1A <- 25
+
+pnorm(220,mean,variance1A,lower.tail = FALSE)
+```
+
+B) On a full flight, what is the probability that average passenger weight (with baggage) exceeds 220 pounds?
+
+```{r}
+n <- 40
+variance1B <- (25^2)/(n)
+sd1B <- (25)/sqrt(40)
+
+pnorm(220,mean,sd1B,lower.tail = FALSE)
+meanwt <- numeric(N)
+
+for (i in 1:10^5){
+  meanwt[i] <- mean(rnorm(n,mean,variance1A))
+}
+
+ggplot(data=NULL, aes(x=meanwt)) +
+  geom_density()
+
+sum(meanwt > 220)/(10^5)
+```
+
+C) According to air safety regulations, the total weight of passengers and baggage should not exceed 8800 pounds. What is the probability that this happens on a full flight?
+
+```{r}
+#n*mean = 40*210
+mean1C <- n*mean
+variance <- n*variance1A
+sd <- sqrt(n*(variance1A^2))
+
+
+
+
+
+```
+
+
+### Problem 2
+
+A statistical consultant for a rental car company discovers that the distribution of miles per day that customers drive its rental cars is somewhat right skewed with an occasional large outlier. The daily mileage distribution has a mean of 98 miles and a standard deviation of 51 miles. Assume that the number of miles driven each day is independent of any other day (though that is probably not strictly true, if you consider people's driving habits).
+
+A) Suppose someone mistakenly tries to model daily mileage using a normal curve. What proportion of the modeled mileage values would be negative—which is of course impossible in the real world?
+
+```{r}
+
+```
+
+B) What is the probability that the average daily mileage for a car that was rented for 289 days last year exceeds 100 miles?
+
+```{r}
+
+```
+
+C) If cars are typically rented 289 days out of the year and we consider the company's entire fleet, then 15% of vehicles were driven fewer than how many miles per day last year, on average?
+
+```{r}
+
+```
+
+
+D) A typical U.S. driver puts approximately 13,500 miles on their personal vehicle each year. What is the probability that the total mileage (i.e., the sum of the daily mileage) for a car that was rented for a total of 289 days last year exceeds twice that amount?
+
+```{r}
+
+```
+
+
+### Problem 3
+
+An electrical appliance uses four 1.5v batteries. They are connected in series so that the total voltage is the sum of the voltages in the four batteries. The population of batteries has a mean voltage of 1.5v with a standard deviation of 0.2v. Five randomly-selected resistors labeled 100-ohm are connected in series so that the resistance is additive. In reality, the resistors come from a population that is ~ N(100, 2.89). What is the probability that the resistance in the circuit is more than 11 ohm away from its expected value?
+
+```{r}
+
+```
+
+
+### Problem 4
+
+Scores on the Wechsler Adult Intelligence Scale (WAIS) are often said to be normally distributed with a mean of 100 and a standard deviation of 15. However, raw WAIS test scores are scaled and rounded to integer values. This makes them discrete, so the scores would be approximately normally distributed.
+
+A) The following groupings have been proposed by some practitioners as qualitative descriptors to indicate relative intelligence of individuals on tests like the WAIS. What proportion of adults would fall into each category?
+
+| Scores        | Classification |
+|---------------|----------------|
+| 130 and above |  Very Superior |
+| 120-129       |       Superior |
+| 110-119       |   High Average |
+| 90-109        | Average        |
+| 80-89         | Low Average    |
+| 70-79         | Borderline     |
+| 69 and below  | Extremely Low  |
+
+```{r}
+low <- pnorm(69.5,100,15)
+elow <- pnorm(79.5,100,15)-pnorm(69.5,100,15)
+bd <- pnorm(89.5,100,15)-pnorm(79.5,100,15)
+lavg <- pnorm(99.5,100,15)-pnorm(89.5,100,15)
+avg <- pnorm(109.5,100,15)-pnorm(99.5,100,15)
+havg <- pnorm(119.5,100,15)-pnorm(109.5,100,15)
+sup <- pnorm(129.5,100,15)-pnorm(119.5,100,15)
+vsup <- 1-pnorm(129.5,100,15)
+
+
+```
+
+B) To qualify for membership in the high-IQ society Mensa, an applicant must score at or above the 98th percentile on an accepted standardized intelligence test. What score must someone achieve on the WAIS to be eligible for Mensa? (Round down to a whole number.)
+
+```{r}
+qnorm(.98,100,15)
+```
+
+
+### Problem 5
+
+Recent research suggests that 22.9% of college students between the ages of 18 and 24 are clinically addicted to alcohol and/or drugs. A psychologist selects a nationwide random sample of 1000 college students for an in-depth survey on drinking and drug use. 
+
+A) What is the probability that she gets at least 250 students who are addicted to alcohol and/or drugs in her sample? (Use exact binomial calculation for total successes.)
+
+```{r}
+1-pbinom(249,1000,.229)
+```
+
+B) What is the probability that she gets at least 250 students who are addicted to alcohol and/or drugs in her sample? (Use CLT for total successes with continuity correction.)
+
+```{r}
+n <- 1000
+p <- .229
+mean <- n * p
+sd <- sqrt(n*p*(1-p))
+1-pnorm(249,mean,sd)
+```
+
+C) What is the probability that she gets at least 250/1000 students who are addicted to alcohol and/or drugs in her sample? (Use CLT for proportion of successes.)
+
+```{r}
+n <- 1000
+p <- .229
+phat <- 250/1000
+
+1-pnorm(phat,p,sqrt(p*(1-p)/n))
+```
